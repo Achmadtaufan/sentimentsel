@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+{% load staticfiles %}
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Customer Satisfaction</title>
+    <style>
+        header{
+            letter-spacing: 3px;
+            line-height: 1.3;
+            padding: 1em;
+            color: white;
+            background-color: #00BFFF;
+            text-align: center;
+        }
+        footer{
+            padding: 1em;
+            color: white;
+            background-color: #00BFFF;
+            text-align: center;
+        }
+        .column{
+            text-align: justify;
+            height: 265px;
+            background-color: #e6e6fa;
+            padding: 10px;
+            font-size: 14pt;
+            line-height: 20px;
+            text-indent: 50px;
+        }
+        .topnav{
+            overflow: hidden;
+            background-color: white;
+        }
+        .topnav a{
+            float: left;
+            display: block;
+            color: black;
+            text-align: center;
+            padding: 14px 16px;
+            text-decoration: none;
+            font-size: 17px;
+        }
+        .topnav a:hover{
+            background-color: #ddd;
+            color:black;
+        }
+        .topnav a.active{
+            background-color: #00BFFF;
+            color: white;
+        }
+        #myInput{
+            background-position: 10px 10px;
+            background-repeat: no-repeat;
+            width: 20%;
+            font-size: 16px;
+            padding: 12px 20px 12px 40px;
+            border: 1px solid #ddd;
+            margin-bottom: 12px;
+        }
+        #myTable{
+            border-collapse: collapse;
+        }
+
+        #myTable th, #myTable td{
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+
+        #myTable tr:nth-child(even){
+            background-color: #f2f2f2
+        }
+
+        #myTable th {
+            text-align: center;
+            background-color: #00BFFF;
+            color: white;
+        }
+
+    </style>
+
+</head>
+<body>
+{% block content %}
+    <section id="page-breadcrumb">
+        <div class="vertical-center sun">
+            <div class="container">
+                <div class="row">
+                    <div class="action">
+                        <div class="col-sm-12">
+
+                            <h1>Aplikasi Klasifikasi Sentimen pada Tweets PT. TRANSJAKARTA</h1>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <form action="/tweets/" method="post">{% csrf_token %}
+                    <p style="margin-left: 40px">
+{#                        <button onclick="ShowTableChart" style="font-size: 12pt; margin-top: 20px; width: 150px; height: 30px; cursor: pointer;" value="Klasifikasi Tweets" class="btn btn-primary">Klasifikasi Tweets</button>#}
+                        <button onclick="ShowTableChart" value="Klasifikasi Tweets" class="btn btn-primary btn-lg">Klasifikasi Tweets</button>
+                    </p>
+                </form>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-offset-4 col-md-4">
+                <p><input type="search" id="myInput" placeholder="Search for tweets.." title="Type in a name"></p>
+                <button onclick="myFunction()">Search</button>
+                <table id="myTable">
+                    <tr>
+                        <th style="width: 85%;">Sentiment</th>
+                        <th style="width: 15%;">Classification</th>
+                    </tr>
+                    {% for item in obj %}
+                        <tr>
+                            <td style="width: 85%;">{{ item.sentiment }}</td>
+                            <td style="width: 15%; text-align: center;">{{ item.classification }}</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+    </div>
+    <!--<div id="myDIV" style="display: none">-->
+
+    <!--<div class="clearfix"></div>-->
+
+    <script>
+        function ShowTableChart() {
+            var x = document.getElementById('myDIV');
+            if (x.style.display === "none') {
+                x.style.display = 'block';
+        } else {
+            x.style.display = 'none';
+        }
+        }
+        function myFunction() {
+            var input, filter, table, tr, td, td1, i, sentpos_count, sentneg_count, sentnet_count;
+            sentpos_count = 0;
+            sentneg_count = 0;
+            sentnet_count = 0;
+            input = document.getElementById("myInput");
+            filter = input.value.toUpperCase();
+            table = document.getElementById("myTable");
+            tr = table.getElementsByTagName("tr");
+            for (i = 0; i < tr.length; i++) {
+                td = tr[i].getElementsByTagName("td")[0];
+                td1 = tr[i].getElementsByTagName("td")[1];
+                if (td) {
+                    if (td.innerHTML.toUpperCase().indexOf(filter) > -1) {
+
+                        if (td1.innerHTML === "positif") {
+                            sentpos_count += 1;
+                            //window.print(pos_count);
+                            //document.write(pos_count);
+
+                        } else if (td1.innerHTML === "negatif"){
+                            sentneg_count += 1;
+                        } else {
+                            sentnet_count += 1;
+                        }
+                        tr[i].style.display = "";
+                    } else {
+                        tr[i].style.display = "none";
+                    }
+                }
+            }
+            // Load google charts
+            google.charts.load('current', {'packages':['corechart']});
+            google.charts.setOnLoadCallback(drawChart);
+
+            // Draw the chart and set the chart values
+            function drawChart() {
+                var data = google.visualization.arrayToDataTable([
+                    ['Task', 'Hours per Day'],
+                    ['Sentiment Positif', sentpos_count],
+                    ['Sentiment Negatif', sentneg_count],
+                    ['Sentiment Netral', sentnet_count]
+                ]);
+
+                // Optional; add a title and set the width and height of the chart
+                var options = {'title':'Pie Chart Hasil Klasifikasi Tweets', 'width':550, 'height':400};
+
+                // Display the chart inside the <div> element with id="piechart"
+                var chart = new google.visualization.PieChart(document.getElementById('piechart'));
+                chart.draw(data, options);
+            }
+            //document.write(neg_count);
+        }
+    </script>
+    <!--<div id="piechart"></div>
+
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
+    <script type="text/javascript">
+
+        var table, sentpos_count, sentneg_count, sentnet_count;
+        sentpos_count = 0;
+        sentneg_count = 0;
+        sentnet_count = 0;
+        table = document.getElementById("myTable");
+        tr = table.getElementsByTagName("tr");
+        for (i = 0; i < tr.length; i++) {
+            td = tr[i].getElementsByTagName("td")[1];
+            if (td) {
+                if (td.innerHTML === "positif") {
+                    sentpos_count += 1;
+                } else if (td.innerHTML === "negatif") {
+                    sentneg_count += 1;
+                } else {
+                    sentnet_count += 1;
+                }
+            }
+        }
+
+        // Load google charts
+        google.charts.load('current', {'packages':['corechart']});
+        google.charts.setOnLoadCallback(drawChart);
+
+        // Draw the chart and set the chart values
+        function drawChart() {
+            var data = google.visualization.arrayToDataTable([
+                ['Sentiment', 'Total'],
+                ['Sentiment Positif', sentpos_count],
+                ['Sentiment Negatif', sentneg_count],
+                ['Sentiment Netral', sentnet_count]
+            ]);
+
+            // Optional; add a title and set the width and height of the chart
+            var options = {'title':'Pie Chart Hasil Klasifikasi Tweets', 'width':550, 'height':400};
+
+            // Display the chart inside the <div> element with id="piechart"
+            var chart = new google.visualization.PieChart(document.getElementById('piechart'));
+            chart.draw(data, options);
+        }
+    </script>-->
+
+    <!--<div class="column">
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <p{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</p>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>-->
+    <div class="clearfix"></div>
+{% endblock %}
+</body>
+</html>
